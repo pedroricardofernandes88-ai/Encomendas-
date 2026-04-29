@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EncomendaSort</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+  :root{--bg:#0f0f13;--card:#1a1a24;--card2:#22222f;--accent:#f97316;--accent2:#fb923c;--text:#f1f0ee;--muted:#888;--border:#2e2e3d;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding:0 0 80px;}
+  header{background:linear-gradient(135deg,#1a1a24,#0f0f13);border-bottom:1px solid var(--border);padding:20px 20px 16px;position:sticky;top:0;z-index:100;}
+  header h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;}
+  header h1 span{color:var(--accent);}
+  header p{font-size:12px;color:var(--muted);margin-top:3px;}
+  .container{padding:20px;max-width:600px;margin:0 auto;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;background:var(--card);border-radius:var(--radius);padding:6px;}
+  .tab{flex:1;padding:10px 0;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;background:transparent;color:var(--muted);}
+  .tab.active{background:var(--accent);color:white;}
+  .panel{display:none;}.panel.active{display:block;}
+  textarea{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:14px;width:100%;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;resize:none;min-height:160px;outline:none;transition:border .2s;}
+  textarea:focus{border-color:var(--accent);}
+  textarea::placeholder{color:var(--muted);}
+  .upload-zone{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;position:relative;}
+  .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .upload-zone .ico{font-size:40px;margin-bottom:8px;}
+  .upload-zone p{color:var(--muted);font-size:14px;}
+  .upload-zone strong{color:var(--accent);}
+  #preview{width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-top:14px;display:none;}
+  .btn{width:100%;padding:16px;margin-top:14px;background:var(--accent);color:white;border:none;border-radius:var(--radius);font-family:'Syne',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:background .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn:active{transform:scale(.98);}
+  .btn:disabled{background:#444;cursor:not-allowed;}
+  .btn.sec{background:var(--card2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;margin-top:10px;padding:12px;}
+  .spin-wrap{display:none;text-align:center;padding:30px 0;}.spin-wrap.on{display:block;}
+  .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .spin-wrap p{color:var(--muted);font-size:14px;}
+  .spin-wrap strong{color:var(--accent);font-size:16px;display:block;margin-bottom:4px;}
+  .results{display:none;margin-top:4px;}.results.on{display:block;}
+  .res-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .res-head h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+  .badge{background:var(--accent);color:white;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;}
+  .item-list{background:var(--card);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);}
+  .row{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border);gap:12px;animation:fs .3s ease both;}
+  .row:last-child{border-bottom:none;}
+  @keyframes fs{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .ltr{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:white;flex-shrink:0;}
+  .ltr.dup{background:var(--card2);color:var(--muted);}
+  .iname{flex:1;font-size:15px;font-weight:500;}
+  .qty{font-size:13px;font-weight:700;color:var(--accent2);background:rgba(249,115,22,.12);padding:4px 10px;border-radius:8px;white-space:nowrap;}
+  .qty.none{background:var(--card2);color:var(--muted);}
+  .copy-area{margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:14px;color:var(--muted);white-space:pre-line;line-height:1.8;max-height:200px;overflow-y:auto;}
+  .err{display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius);padding:14px;color:#f87171;font-size:14px;margin-top:14px;word-break:break-word;}
+  .err.on{display:block;}
+  .lbl{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Encomenda<span>Sort</span></h1>
+  <p>Cola o texto ou envia foto — devolve por ordem alfabética</p>
+</header>
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('t')">✏️ Texto</button>
+    <button class="tab" onclick="switchTab('f')">📷 Foto</button>
+  </div>
+
+  <div class="panel active" id="pt">
+    <div class="lbl">Cola a encomenda aqui</div>
+    <textarea id="tinput" placeholder="Exemplo:&#10;2 sacos arroz&#10;Margarina 4kg&#10;1 aguardente&#10;..."></textarea>
+    <button class="btn" onclick="doTexto()">⚡ Organizar por Ordem Alfabética</button>
+  </div>
+
+  <div class="panel" id="pf">
+    <div class="lbl">Foto da encomenda manuscrita</div>
+    <div class="upload-zone">
+      <input type="file" accept="image/*" onchange="handleFoto(this)" id="finput">
+      <div class="ico">📷</div>
+      <p><strong>Tira foto ou escolhe da galeria</strong></p>
+      <p>Suporta papel manuscrito</p>
+    </div>
+    <img id="preview" alt="">
+    <button class="btn" id="btnfoto" onclick="doFoto()" disabled>⚡ Ler e Organizar</button>
+  </div>
+
+  <div class="spin-wrap" id="loading">
+    <div class="spinner"></div>
+    <strong>A processar encomenda…</strong>
+    <p>A IA está a ler e ordenar os artigos</p>
+  </div>
+
+  <div class="err" id="errbox"></div>
+
+  <div class="results" id="results">
+    <div class="res-head">
+      <h2>Resultado</h2>
+      <span class="badge" id="badge">0 artigos</span>
+    </div>
+    <div class="item-list" id="ilist"></div>
+    <div class="lbl" style="margin-top:20px">Copiar lista</div>
+    <div class="copy-area" id="copyarea"></div>
+    <button class="btn sec" onclick="copiar()">📋 Copiar Lista</button>
+    <button class="btn sec" onclick="reset()">🔄 Nova Encomenda</button>
+  </div>
+</div>
+
+<script>
+let b64=null, mime='image/jpeg', lastRaw='';
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('active',(i===0&&t==='t')||(i===1&&t==='f')));
+  document.getElementById('pt').classList.toggle('active',t==='t');
+  document.getElementById('pf').classList.toggle('active',t==='f');
+  reset();
+}
+
+function handleFoto(inp){
+  const file=inp.files[0]; if(!file) return;
+  mime=file.type||'image/jpeg';
+  const r=new FileReader();
+  r.onload=e=>{
+    b64=e.target.result.split(',')[1];
+    const img=document.getElementById('preview');
+    img.src=e.target.result; img.style.display='block';
+    document.getElementById('btnfoto').disabled=false;
+  };
+  r.readAsDataURL(file);
+}
+
+function showLoad(v){
+  document.getElementById('loading').classList.toggle('on',v);
+  if(v){document.getElementById('results').classList.remove('on');document.getElementById('errbox').classList.remove('on');}
+}
+
+function showErr(msg){
+  document.getElementById('loading').classList.remove('on');
+  const el=document.getElementById('errbox');
+  el.textContent=msg;
+  el.classList.add('on');
+}
+
+const SYS=`És um assistente de organização de encomendas de mercearia.
+Devolve UNICAMENTE um objeto JSON válido — zero texto extra, zero backticks, zero markdown.
+Extrai cada artigo e a sua quantidade (se existir). Ordena alfabeticamente pelo nome do artigo (a quantidade não conta para a ordenação).
+Formato obrigatório exato:
+{"items":[{"nome":"Aguardente","qty":"1"},{"nome":"Arroz","qty":"50kg"}]}
+Regras:
+- Letra maiúscula no início do nome do artigo.
+- qty é string vazia "" se não houver quantidade.
+- Ignora linhas que não sejam artigos (saudações, "Obrigada", emojis solitários, etc).
+- Não incluas NADA antes do { nem depois do }.`;
+
+async function callAI(msgs){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1500,system:SYS,messages:msgs})
+  });
+  if(!r.ok){const t=await r.text();throw new Error('HTTP '+r.status+': '+t.substring(0,120));}
+  const d=await r.json();
+  if(d.error) throw new Error(d.error.message);
+  lastRaw=d.content.map(b=>b.type==='text'?b.text:'').join('').trim();
+  // clean
+  let s=lastRaw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  const i1=s.indexOf('{'), i2=s.lastIndexOf('}');
+  if(i1<0||i2<0) throw new Error('Sem JSON na resposta. Resposta recebida: '+lastRaw.substring(0,150));
+  s=s.substring(i1,i2+1);
+  try{return JSON.parse(s);}
+  catch(e){throw new Error('JSON inválido: '+e.message+' | raw: '+s.substring(0,150));}
+}
+
+async function doTexto(){
+  const txt=document.getElementById('tinput').value.trim();
+  if(!txt) return;
+  showLoad(true);
+  try{
+    const res=await callAI([{role:'user',content:'Encomenda:\n'+txt}]);
+    if(!res.items||!Array.isArray(res.items)) throw new Error('Campo items em falta');
+    render(res.items);
+  }catch(e){showErr('Erro: '+e.message);}
+}
+
+async function doFoto(){
+  if(!b64) return;
+  showLoad(true);
+  try{
+    const res=await callAI([{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+      {type:'text',text:'Lê todos os artigos desta encomenda manuscrita e organiza conforme instruído.'}
+    ]}]);
+    if(!res.items||!Array.isArray(res.items)) throw new Error('Campo items em falta');
+    render(res.items);
+  }catch(e){showErr('Erro imagem: '+e.message);}
+}
+
+function render(items){
+  document.getElementById('loading').classList.remove('on');
+  document.getElementById('results').classList.add('on');
+  document.getElementById('badge').textContent=items.length+' artigo'+(items.length!==1?'s':'');
+  const list=document.getElementById('ilist');
+  list.innerHTML='';
+  let last='';
+  items.forEach((it,i)=>{
+    const l=(it.nome||'?')[0].toUpperCase();
+    const dup=l===last; last=l;
+    const row=document.createElement('div');
+    row.className='row';
+    row.style.animationDelay=(i*.04)+'s';
+    row.innerHTML=`<div class="ltr${dup?' dup':''}">${dup?'':l}</div><div class="iname">${esc(it.nome)}</div>${it.qty?`<div class="qty">${esc(it.qty)}</div>`:`<div class="qty none">—</div>`}`;
+    list.appendChild(row);
+  });
+  document.getElementById('copyarea').textContent=items.map(it=>it.qty?`${it.nome} — ${it.qty}`:it.nome).join('\n');
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function copiar(){
+  const t=document.getElementById('copyarea').textContent;
+  navigator.clipboard.writeText(t).catch(()=>{const e=document.createElement('textarea');e.value=t;document.body.appendChild(e);e.select();document.execCommand('copy');document.body.removeChild(e);});
+  const b=document.querySelectorAll('.btn.sec')[0];
+  b.textContent='✅ Copiado!';
+  setTimeout(()=>b.textContent='📋 Copiar Lista',2000);
+}
+
+function reset(){
+  ['results','errbox','loading'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById('tinput').value='';
+  const img=document.getElementById('preview');img.style.display='none';img.src='';
+  b64=null;
+  document.getElementById('btnfoto').disabled=true;
+  const fi=document.getElementById('finput');if(fi)fi.value='';
+}
+</script>
+</body>
+</html>
